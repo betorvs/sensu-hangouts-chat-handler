@@ -58,7 +58,7 @@ func formattedEventAction(event *types.Event) string {
 
 // eventDescription func return an message to use it
 func eventDescription(event *types.Event) string {
-	return fmt.Sprintf("*%s*\n _SERVER:_ %s \n _CHECK:_ %s \n _OUTPUT:_ %s", formattedEventAction(event), event.Entity.Name, event.Check.Name, event.Check.Output)
+	return fmt.Sprintf("*%s*\n SERVER: %s \n CHECK: %s \n OUTPUT: %s", formattedEventAction(event), event.Entity.Name, event.Check.Name, event.Check.Output)
 }
 
 // run func do everything
@@ -114,12 +114,14 @@ func Post(url string, body []byte) error {
 	if err != nil {
 		fmt.Printf("[ERROR] %s", err)
 	}
-	bodyText, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Printf("[ERROR] %s", err)
+	if resp.StatusCode != 200 {
+		bodyText, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Printf("[ERROR] %s", err)
+		}
+		s := string(bodyText)
+		fmt.Printf("[LOG]: %s ; %s", resp.Status, s)
 	}
-	s := string(bodyText)
-	// fmt.Printf("[LOG]: %s", s)
 	defer resp.Body.Close()
 	return nil
 }
