@@ -85,7 +85,7 @@ Flags:
 Example: 
 
 ```sh
-sensuctl asset create sensu-hangouts-chat-handler --url "" --sha512 ""
+sensuctl asset create sensu-hangouts-chat-handler --url "https://assets.bonsai.sensu.io/1daec49623e9384d5374f7e11f12a343cf374e5f/sensu-hangouts-chat-handler_0.0.1_linux_amd64.tar.gz" --sha512 "59fd8fd9909819ad9eb1897814e38903634e6ed38cadc50a2ad75a069b466bc9b4eb23bc33ce51fc58bb8cff47b931256b0e2e8cfe60a89c4ebfafca097e8c45"
 ```
 
 
