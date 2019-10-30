@@ -1,5 +1,5 @@
 # Sensu Go Hangouts Chat Handler
-TravisCI: 
+TravisCI: [![Build Status](https://travis-ci.org/betorvs/sensu-hangouts-chat-handler.svg?branch=master)](https://travis-ci.org/betorvs/sensu-hangouts-chat-handler)
 
 The Sensu Go Hangouts Chat Handler is a [Sensu Event Handler][3] which manages
 [Hangouts Chat][2] for alerting purposes. With this handler,
