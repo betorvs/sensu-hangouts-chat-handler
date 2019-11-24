@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/sensu/sensu-go/types"
@@ -14,8 +15,9 @@ import (
 )
 
 var (
-	webhook string
-	stdin   *os.File
+	webhook     string
+	annotations string
+	stdin       *os.File
 )
 
 // payload struct for post in sensu
@@ -43,6 +45,12 @@ func configureRootCommand() *cobra.Command {
 		os.Getenv("WEBHOOK_HANGOUTSCHAT"),
 		"The Webhook URL, use default from WEBHOOK_HANGOUTSCHAT env var")
 
+	cmd.Flags().StringVarP(&annotations,
+		"withAnnotations",
+		"a",
+		os.Getenv("HANGOUTSCHAT_ANNOTATIONS"),
+		"The Hangouts Chat Handler will parse check and entity annotations with these values. Use HANGOUTSCHAT_ANNOTATIONS env var with commas, like: documentation,playbook")
+
 	return cmd
 }
 
@@ -56,9 +64,43 @@ func formattedEventAction(event *types.Event) string {
 	}
 }
 
+// stringInSlice checks if a slice contains a specific string
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+// parseAnnotations func try to find a predeterminated keys
+func parseAnnotations(event *types.Event) string {
+	var output string
+	// localannotations := make(map[string]string)
+	tags := strings.Split(annotations, ",")
+	if event.Check.Annotations != nil {
+		for key, value := range event.Check.Annotations {
+			if stringInSlice(key, tags) {
+				output += fmt.Sprintf("  %s: %s ,\n", key, value)
+			}
+		}
+	}
+	if event.Entity.Annotations != nil {
+		for key, value := range event.Check.Annotations {
+			if stringInSlice(key, tags) {
+				output += fmt.Sprintf("  %s: %s ,\n", key, value)
+			}
+		}
+	}
+	output += fmt.Sprintf("Check output: %s", event.Check.Output)
+
+	return output
+}
+
 // eventDescription func return an message to use it
 func eventDescription(event *types.Event) string {
-	return fmt.Sprintf("*%s*\n SERVER: %s \n CHECK: %s \n OUTPUT: %s", formattedEventAction(event), event.Entity.Name, event.Check.Name, event.Check.Output)
+	return fmt.Sprintf("*%s*\nServer: %s, \nCheck: %s, \nMore Information:\n%s", formattedEventAction(event), event.Entity.Name, event.Check.Name, parseAnnotations(event))
 }
 
 // run func do everything
@@ -74,6 +116,10 @@ func run(cmd *cobra.Command, args []string) error {
 	eventJSON, err := ioutil.ReadAll(stdin)
 	if err != nil {
 		return fmt.Errorf("failed to read stdin: %s", err)
+	}
+
+	if annotations == "" {
+		annotations = "documentation,playbook"
 	}
 
 	event := &types.Event{}

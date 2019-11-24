@@ -1,9 +1,12 @@
 # Sensu Go Hangouts Chat Handler
 TravisCI: [![Build Status](https://travis-ci.org/betorvs/sensu-hangouts-chat-handler.svg?branch=master)](https://travis-ci.org/betorvs/sensu-hangouts-chat-handler)
+[![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/betorvs/sensu-hangouts-chat-handler)
 
 The Sensu Go Hangouts Chat Handler is a [Sensu Event Handler][3] which manages
 [Hangouts Chat][2] for alerting purposes. With this handler,
 [Sensu][1] can alert systems administrators in Hangouts Chats.
+
+This handler was inspired by [hangouts ruby plugin][5].
 
 ## Installation
 
@@ -97,3 +100,4 @@ See https://github.com/sensu/sensu-go/blob/master/CONTRIBUTING.md
 [2]: https://developers.google.com/hangouts/chat
 [3]: https://docs.sensu.io/sensu-go/5.0/reference/handlers/#how-do-sensu-handlers-work
 [4]: https://github.com/betorvs/sensu-hangouts-chat-handler/releases
+[5]: https://github.com/clevertoday/sensu-plugins-hangouts-chat
