@@ -52,7 +52,10 @@ Example Sensu Go check definition:
     "type": "CheckConfig",
     "metadata": {
         "namespace": "default",
-        "name": "dummy-app-healthz"
+        "name": "dummy-app-healthz",
+        "annotations": {
+            "documentation": "https://docs.sensu.io/sensu-go/latest"
+        }
     },
     "spec": {
         "command": "check-http -u http://localhost:8080/healthz",
@@ -77,11 +80,17 @@ Usage:
 
 Flags:
   -w, --webhook string   The Webhook from Hangouts Chat, use default from WEBHOOK_HANGOUTSCHAT env var
-  -h, --help          help for sensu-opsgenie-handler
+  -h, --help             help for sensu-opsgenie-handler
+  -a, --withAnnotations  To parse annotations metadata field to include in message to Hangouts Chat. Use HANGOUTSCHAT_ANNOTATIONS env var. Split them using comma (,).
 
 ```
 
-**Note:** Make sure to set the `WEBHOOK_HANGOUTSCHAT` environment variable for sensitive credentials in production to prevent leaking into system process table. Please remember command arguments can be viewed by unprivileged users using commands such as `ps` or `top`. The `--auth` argument is provided as an override primarily for testing purposes. 
+**Note:** Make sure to set the `WEBHOOK_HANGOUTSCHAT` environment variable for sensitive credentials in production to prevent leaking into system process table. Please remember command arguments can be viewed by unprivileged users using commands such as `ps` or `top`. The `--webhook` argument is provided as an override primarily for testing purposes. 
+
+### To parse any annotation
+
+With this new feature you can include any annotation metadata field to show inside Hangsout Chat message. By default they will look for documentation and playbook. 
+
 
 ### Asset creation
 
