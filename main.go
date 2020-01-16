@@ -142,7 +142,10 @@ func run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		fmt.Printf("[ERROR] %s", err)
 	}
-	Post(webhook, bodymarshal)
+	err = Post(webhook, bodymarshal)
+	if err != nil {
+		fmt.Printf("[ERROR] %s", err)
+	}
 	return nil
 }
 
