@@ -15,14 +15,66 @@ import (
 )
 
 var (
-	webhook     string
-	annotations string
-	stdin       *os.File
+	webhook        string
+	annotations    string
+	sensuDashboard string
+	stdin          *os.File
 )
 
-// payload struct for post in sensu
-type payload struct {
-	Text string `json:"text"`
+// SliceCard struct
+type SliceCard struct {
+	Cards []Cards `json:"cards"`
+}
+
+// Header struct
+type Header struct {
+	Title    string `json:"title"`
+	Subtitle string `json:"subtitle"`
+	ImageURL string `json:"imageUrl"`
+}
+
+// KeyValue struct
+type KeyValue struct {
+	TopLabel string `json:"topLabel"`
+	Content  string `json:"content"`
+}
+
+// OpenLink struct
+type OpenLink struct {
+	URL string `json:"url"`
+}
+
+// OnClick struct
+type OnClick struct {
+	OpenLink OpenLink `json:"openLink"`
+}
+
+// TextButton struct
+type TextButton struct {
+	Text    string  `json:"text"`
+	OnClick OnClick `json:"onClick"`
+}
+
+// Buttons struct
+type Buttons struct {
+	TextButton TextButton `json:"textButton"`
+}
+
+// Widgets struct
+type Widgets struct {
+	KeyValue KeyValue  `json:"keyValue,omitempty"`
+	Buttons  []Buttons `json:"buttons,omitempty"`
+}
+
+// Sections struct
+type Sections struct {
+	Widgets []Widgets `json:"widgets"`
+}
+
+// Cards struct
+type Cards struct {
+	Header   Header     `json:"header"`
+	Sections []Sections `json:"sections"`
 }
 
 func main() {
@@ -50,6 +102,11 @@ func configureRootCommand() *cobra.Command {
 		"a",
 		os.Getenv("HANGOUTSCHAT_ANNOTATIONS"),
 		"The Hangouts Chat Handler will parse check and entity annotations with these values. Use HANGOUTSCHAT_ANNOTATIONS env var with commas, like: documentation,playbook")
+
+	cmd.Flags().StringVar(&sensuDashboard,
+		"sensuDashboard",
+		os.Getenv("HANGOUTSCHAT_SENSU_DASHBOARD"),
+		"The HANGOUTS Chat Handler will use it to create a source Sensu Dashboard URL. Use HANGOUTSCHAT_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n")
 
 	return cmd
 }
@@ -82,25 +139,27 @@ func parseAnnotations(event *types.Event) string {
 	if event.Check.Annotations != nil {
 		for key, value := range event.Check.Annotations {
 			if stringInSlice(key, tags) {
-				output += fmt.Sprintf("  %s: %s ,\n", key, value)
+				output += fmt.Sprintf("%s: <a href=\"%s\">Link</a>\n", key, value)
 			}
 		}
 	}
 	if event.Entity.Annotations != nil {
 		for key, value := range event.Check.Annotations {
 			if stringInSlice(key, tags) {
-				output += fmt.Sprintf("  %s: %s ,\n", key, value)
+				output += fmt.Sprintf("%s: <a href=\"%s\">Link</a>\n", key, value)
 			}
 		}
 	}
+	if sensuDashboard != "disabled" {
+		output += fmt.Sprintf("<a href=\"%s/%s/events/%s/%s\">Link Sensu Source</a>\n", sensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
+	}
 	output += fmt.Sprintf("Check output: %s", event.Check.Output)
-
 	return output
 }
 
 // eventDescription func return an message to use it
 func eventDescription(event *types.Event) string {
-	return fmt.Sprintf("*%s*\nServer: %s, \nCheck: %s, \nMore Information:\n%s", formattedEventAction(event), event.Entity.Name, event.Check.Name, parseAnnotations(event))
+	return fmt.Sprintf("Entity: %s, \nCheck: %s, \n", event.Entity.Name, event.Check.Name)
 }
 
 // run func do everything
@@ -122,6 +181,10 @@ func run(cmd *cobra.Command, args []string) error {
 		annotations = "documentation,playbook"
 	}
 
+	if sensuDashboard == "" {
+		sensuDashboard = "disabled"
+	}
+
 	event := &types.Event{}
 	err = json.Unmarshal(eventJSON, event)
 	if err != nil {
@@ -135,8 +198,33 @@ func run(cmd *cobra.Command, args []string) error {
 	if !event.HasCheck() {
 		return fmt.Errorf("event does not contain check")
 	}
-	formPost := payload{
-		Text: eventDescription(event),
+	keyvalue1 := KeyValue{
+		TopLabel: formattedEventAction(event),
+		Content:  eventDescription(event),
+	}
+	keyvalue2 := KeyValue{
+		TopLabel: "More Information",
+		Content:  parseAnnotations(event),
+	}
+	widget1 := Widgets{
+		KeyValue: keyvalue1,
+	}
+	widget2 := Widgets{
+		KeyValue: keyvalue2,
+	}
+	header := Header{
+		Title:    "Sensu Event (Entity/Check)",
+		Subtitle: fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name),
+	}
+	section := Sections{
+		Widgets: []Widgets{widget1, widget2},
+	}
+	card := Cards{
+		Header:   header,
+		Sections: []Sections{section},
+	}
+	formPost := SliceCard{
+		Cards: []Cards{card},
 	}
 	bodymarshal, err := json.Marshal(&formPost)
 	if err != nil {
