@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -62,7 +63,7 @@ type Buttons struct {
 
 // Widgets struct
 type Widgets struct {
-	KeyValue KeyValue  `json:"keyValue,omitempty"`
+	KeyValue *KeyValue `json:"keyValue,omitempty"`
 	Buttons  []Buttons `json:"buttons,omitempty"`
 }
 
@@ -131,30 +132,67 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
-// parseAnnotations func try to find a predeterminated keys
-func parseAnnotations(event *types.Event) string {
-	var output string
-	// localannotations := make(map[string]string)
+// // parseAnnotations func try to find a predeterminated keys
+// func parseAnnotations(event *types.Event) string {
+// 	var output string
+// 	tags := strings.Split(annotations, ",")
+// 	if event.Check.Annotations != nil {
+// 		for key, value := range event.Check.Annotations {
+// 			if stringInSlice(key, tags) {
+// 				output += fmt.Sprintf("%s: <a href=\"%s\">Link</a>\n", key, value)
+// 			}
+// 		}
+// 	}
+// 	if event.Entity.Annotations != nil {
+// 		for key, value := range event.Check.Annotations {
+// 			if stringInSlice(key, tags) {
+// 				output += fmt.Sprintf("%s: <a href=\"%s\">Link</a>\n", key, value)
+// 			}
+// 		}
+// 	}
+// 	if sensuDashboard != "disabled" {
+// 		output += fmt.Sprintf("<a href=\"%s/%s/events/%s/%s\">Link Sensu Source</a>\n", sensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
+// 	}
+// 	return output
+// }
+
+// parseAnnotationsToButton func
+func parseAnnotationsToButton(event *types.Event) []Buttons {
+	var button []Buttons
 	tags := strings.Split(annotations, ",")
 	if event.Check.Annotations != nil {
 		for key, value := range event.Check.Annotations {
 			if stringInSlice(key, tags) {
-				output += fmt.Sprintf("%s: <a href=\"%s\">Link</a>\n", key, value)
+				newbutton := Buttons{}
+				newbutton.TextButton.Text = fmt.Sprintf("Check %s", key)
+				newbutton.TextButton.OnClick.OpenLink.URL = value
+				button = append(button, newbutton)
 			}
 		}
 	}
 	if event.Entity.Annotations != nil {
 		for key, value := range event.Check.Annotations {
 			if stringInSlice(key, tags) {
-				output += fmt.Sprintf("%s: <a href=\"%s\">Link</a>\n", key, value)
+				newbutton := Buttons{}
+				newbutton.TextButton.Text = fmt.Sprintf("Entity %s", key)
+				newbutton.TextButton.OnClick.OpenLink.URL = value
+				button = append(button, newbutton)
 			}
 		}
 	}
 	if sensuDashboard != "disabled" {
-		output += fmt.Sprintf("<a href=\"%s/%s/events/%s/%s\">Link Sensu Source</a>\n", sensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
+		newbutton := Buttons{}
+		newbutton.TextButton.Text = "Link Event Sensu Source"
+		newbutton.TextButton.OnClick.OpenLink.URL = fmt.Sprintf("%s/%s/events/%s/%s", sensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
+		button = append(button, newbutton)
 	}
-	output += fmt.Sprintf("Check output: %s", event.Check.Output)
-	return output
+	if len(button) == 0 {
+		newbutton := Buttons{}
+		newbutton.TextButton.Text = "Link Sensu Documentation"
+		newbutton.TextButton.OnClick.OpenLink.URL = "https://docs.sensu.io/sensu-go/latest"
+		button = append(button, newbutton)
+	}
+	return button
 }
 
 // eventDescription func return an message to use it
@@ -202,30 +240,49 @@ func run(cmd *cobra.Command, args []string) error {
 		TopLabel: formattedEventAction(event),
 		Content:  eventDescription(event),
 	}
-	keyvalue2 := KeyValue{
-		TopLabel: "More Information",
-		Content:  parseAnnotations(event),
+	// keyvalue2 := KeyValue{
+	// 	TopLabel: "More Information",
+	// 	Content:  parseAnnotations(event),
+	// }
+	keyvalue3 := KeyValue{
+		TopLabel: "Check Output",
+		Content:  event.Check.Output,
 	}
 	widget1 := Widgets{
-		KeyValue: keyvalue1,
+		KeyValue: &keyvalue1,
 	}
 	widget2 := Widgets{
-		KeyValue: keyvalue2,
+		// KeyValue: &keyvalue2,
+		Buttons: parseAnnotationsToButton(event),
+	}
+	widget3 := Widgets{
+		KeyValue: &keyvalue3,
 	}
 	header := Header{
 		Title:    "Sensu Event (Entity/Check)",
 		Subtitle: fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name),
 	}
-	section := Sections{
-		Widgets: []Widgets{widget1, widget2},
+	section1 := Sections{
+		Widgets: []Widgets{widget1},
+	}
+	section2 := Sections{
+		Widgets: []Widgets{widget2},
+	}
+	section3 := Sections{
+		Widgets: []Widgets{widget3},
 	}
 	card := Cards{
 		Header:   header,
-		Sections: []Sections{section},
+		Sections: []Sections{section1, section2, section3},
 	}
 	formPost := SliceCard{
 		Cards: []Cards{card},
 	}
+	prettyJSON, err := json.MarshalIndent(formPost, "", "  ")
+	if err != nil {
+		log.Fatal("Failed to generate json", err)
+	}
+	fmt.Printf("%s\n", string(prettyJSON))
 	bodymarshal, err := json.Marshal(&formPost)
 	if err != nil {
 		fmt.Printf("[ERROR] %s", err)
