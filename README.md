@@ -82,6 +82,7 @@ Flags:
   -w, --webhook string   The Webhook from Hangouts Chat, use default from WEBHOOK_HANGOUTSCHAT env var
   -h, --help             help for sensu-opsgenie-handler
   -a, --withAnnotations  To parse annotations metadata field to include in message to Hangouts Chat. Use HANGOUTSCHAT_ANNOTATIONS env var. Split them using comma (,).
+  --sensuDashboard       Sensu Dashboard URL like: http://sensu-dashboard.example.local/c/~/n", use HANGOUTSCHAT_SENSU_DASHBOARD env var.
 
 ```
 
