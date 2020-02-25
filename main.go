@@ -132,30 +132,6 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
-// // parseAnnotations func try to find a predeterminated keys
-// func parseAnnotations(event *types.Event) string {
-// 	var output string
-// 	tags := strings.Split(annotations, ",")
-// 	if event.Check.Annotations != nil {
-// 		for key, value := range event.Check.Annotations {
-// 			if stringInSlice(key, tags) {
-// 				output += fmt.Sprintf("%s: <a href=\"%s\">Link</a>\n", key, value)
-// 			}
-// 		}
-// 	}
-// 	if event.Entity.Annotations != nil {
-// 		for key, value := range event.Check.Annotations {
-// 			if stringInSlice(key, tags) {
-// 				output += fmt.Sprintf("%s: <a href=\"%s\">Link</a>\n", key, value)
-// 			}
-// 		}
-// 	}
-// 	if sensuDashboard != "disabled" {
-// 		output += fmt.Sprintf("<a href=\"%s/%s/events/%s/%s\">Link Sensu Source</a>\n", sensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
-// 	}
-// 	return output
-// }
-
 // parseAnnotationsToButton func
 func parseAnnotationsToButton(event *types.Event) []Buttons {
 	var button []Buttons
