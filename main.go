@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -254,11 +253,11 @@ func run(cmd *cobra.Command, args []string) error {
 	formPost := SliceCard{
 		Cards: []Cards{card},
 	}
-	prettyJSON, err := json.MarshalIndent(formPost, "", "  ")
-	if err != nil {
-		log.Fatal("Failed to generate json", err)
-	}
-	fmt.Printf("%s\n", string(prettyJSON))
+	// prettyJSON, err := json.MarshalIndent(formPost, "", "  ")
+	// if err != nil {
+	// 	log.Fatal("Failed to generate json", err)
+	// }
+	// fmt.Printf("%s\n", string(prettyJSON))
 	bodymarshal, err := json.Marshal(&formPost)
 	if err != nil {
 		fmt.Printf("[ERROR] %s", err)
