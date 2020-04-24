@@ -35,8 +35,9 @@ type Header struct {
 
 // KeyValue struct
 type KeyValue struct {
-	TopLabel string `json:"topLabel"`
-	Content  string `json:"content"`
+	TopLabel         string `json:"topLabel"`
+	Content          string `json:"content"`
+	ContentMultiline bool   `json:"contentMultiline"`
 }
 
 // OpenLink struct
@@ -212,16 +213,18 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("event does not contain check")
 	}
 	keyvalue1 := KeyValue{
-		TopLabel: formattedEventAction(event),
-		Content:  eventDescription(event),
+		TopLabel:         formattedEventAction(event),
+		Content:          eventDescription(event),
+		ContentMultiline: true,
 	}
 	// keyvalue2 := KeyValue{
 	// 	TopLabel: "More Information",
 	// 	Content:  parseAnnotations(event),
 	// }
 	keyvalue3 := KeyValue{
-		TopLabel: "Check Output",
-		Content:  event.Check.Output,
+		TopLabel:         "Check Output",
+		Content:          event.Check.Output,
+		ContentMultiline: true,
 	}
 	widget1 := Widgets{
 		KeyValue: &keyvalue1,
