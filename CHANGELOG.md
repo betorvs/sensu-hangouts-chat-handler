@@ -14,7 +14,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 - Removed travis-ci integration
 
 ### Added
-- Add tests
+- Added tests
+- Added golanglint
 
 
 ## [0.0.5] - 2020-11-20
