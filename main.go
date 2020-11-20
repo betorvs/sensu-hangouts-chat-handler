@@ -6,19 +6,110 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
+	"github.com/sensu-community/sensu-plugin-sdk/sensu"
+	"github.com/sensu-community/sensu-plugin-sdk/templates"
 	"github.com/sensu/sensu-go/types"
-	"github.com/spf13/cobra"
 )
 
+// Config represents the handler plugin config.
+type Config struct {
+	sensu.PluginConfig
+	Webhook             string
+	SensuDashboard      string
+	WithAnnotations     bool
+	WithLabels          bool
+	MessageTemplate     string
+	MessageLimit        int
+	DescriptionTemplate string
+	DescriptionLimit    int
+}
+
 var (
-	webhook        string
-	annotations    string
-	sensuDashboard string
-	stdin          *os.File
+	plugin = Config{
+		PluginConfig: sensu.PluginConfig{
+			Name:     "sensu-hangouts-chat-handler",
+			Short:    "The Sensu Go Google Hangsout handler for alerting",
+			Keyspace: "sensu.io/plugins/sensu-hangouts-chat-handler/config",
+		},
+	}
+
+	options = []*sensu.PluginConfigOption{
+		{
+			Path:      "webhook",
+			Env:       "HANGOUTSCHAT_WEBHOOK",
+			Argument:  "webhook",
+			Shorthand: "w",
+			Default:   "",
+			Usage:     "The Webhook URL, use default from HANGOUTSCHAT_WEBHOOK env var",
+			Value:     &plugin.Webhook,
+		},
+		{
+			Path:      "sensuDashboard",
+			Env:       "HANGOUTSCHAT_SENSU_DASHBOARD",
+			Argument:  "sensuDashboard",
+			Shorthand: "s",
+			Default:   "disabled",
+			Usage:     "The HANGOUTS Chat Handler will use it to create a source Sensu Dashboard URL. Use HANGOUTSCHAT_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n",
+			Value:     &plugin.SensuDashboard,
+		},
+		{
+			Path:      "withAnnotations",
+			Env:       "",
+			Argument:  "withAnnotations",
+			Shorthand: "a",
+			Default:   false,
+			Usage:     "Include the event.metadata.Annotations in details to send to Hangouts Chat",
+			Value:     &plugin.WithAnnotations,
+		},
+		{
+			Path:      "withLabels",
+			Env:       "",
+			Argument:  "withLabels",
+			Shorthand: "W",
+			Default:   false,
+			Usage:     "Include the event.metadata.Labels in details to send to Hangouts Chat",
+			Value:     &plugin.WithLabels,
+		},
+		{
+			Path:      "messageTemplate",
+			Env:       "HANGOUTSCHAT_MESSAGE_TEMPLATE",
+			Argument:  "messageTemplate",
+			Shorthand: "m",
+			Default:   "{{.Entity.Name}}/{{.Check.Name}}",
+			Usage:     "The template for the message to be sent",
+			Value:     &plugin.MessageTemplate,
+		},
+		{
+			Path:      "messageLimit",
+			Env:       "HANGOUTSCHAT_MESSAGE_LIMIT",
+			Argument:  "messageLimit",
+			Shorthand: "l",
+			Default:   130,
+			Usage:     "The maximum length of the message field",
+			Value:     &plugin.MessageLimit,
+		},
+		{
+			Path:      "descriptionTemplate",
+			Env:       "HANGOUTSCHAT_DESCRIPTION_TEMPLATE",
+			Argument:  "descriptionTemplate",
+			Shorthand: "d",
+			Default:   "{{.Check.Output}}",
+			Usage:     "The template for the description to be sent",
+			Value:     &plugin.DescriptionTemplate,
+		},
+		{
+			Path:      "descriptionLimit",
+			Env:       "HANGOUTSCHAT_DESCRIPTION_LIMIT",
+			Argument:  "descriptionLimit",
+			Shorthand: "L",
+			Default:   1500,
+			Usage:     "The maximum length of the description field",
+			Value:     &plugin.DescriptionLimit,
+		},
+	}
 )
 
 // SliceCard struct
@@ -78,38 +169,36 @@ type Cards struct {
 	Sections []Sections `json:"sections"`
 }
 
-func main() {
-	rootCmd := configureRootCommand()
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+// parseDescription func returns string with custom template string to use in description
+func parseDescription(event *types.Event) (description string) {
+	description, err := templates.EvalTemplate("description", plugin.DescriptionTemplate, event)
+	if err != nil {
+		return ""
 	}
+	// allow newlines to get expanded
+	description = strings.Replace(description, `\n`, "\n", -1)
+	return trim(description, plugin.DescriptionLimit)
 }
 
-func configureRootCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "sensu-hangouts-chat-handler",
-		Short: "The Sensu Go Hangouts Chat handler for incident alerting",
-		RunE:  run,
+// parseEventTitle func returns string
+func parseEventTitle(event *types.Event) (title string) {
+	title, err := templates.EvalTemplate("title", plugin.MessageTemplate, event)
+	if err != nil {
+		return ""
 	}
-	cmd.Flags().StringVarP(&webhook,
-		"webhook",
-		"w",
-		os.Getenv("WEBHOOK_HANGOUTSCHAT"),
-		"The Webhook URL, use default from WEBHOOK_HANGOUTSCHAT env var")
+	return trim(title, plugin.MessageLimit)
+}
 
-	cmd.Flags().StringVarP(&annotations,
-		"withAnnotations",
-		"a",
-		os.Getenv("HANGOUTSCHAT_ANNOTATIONS"),
-		"The Hangouts Chat Handler will parse check and entity annotations with these values. Use HANGOUTSCHAT_ANNOTATIONS env var with commas, like: documentation,playbook")
+func main() {
+	handler := sensu.NewGoHandler(&plugin.PluginConfig, options, checkArgs, executeHandler)
+	handler.Execute()
+}
 
-	cmd.Flags().StringVar(&sensuDashboard,
-		"sensuDashboard",
-		os.Getenv("HANGOUTSCHAT_SENSU_DASHBOARD"),
-		"The HANGOUTS Chat Handler will use it to create a source Sensu Dashboard URL. Use HANGOUTSCHAT_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n")
-
-	return cmd
+func checkArgs(_ *types.Event) error {
+	if len(plugin.Webhook) == 0 {
+		return fmt.Errorf("webhook url for Hangsout Chat is empty")
+	}
+	return nil
 }
 
 // formattedEventAction func
@@ -122,96 +211,76 @@ func formattedEventAction(event *types.Event) string {
 	}
 }
 
-// stringInSlice checks if a slice contains a specific string
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
 // parseAnnotationsToButton func
 func parseAnnotationsToButton(event *types.Event) []Buttons {
 	var button []Buttons
-	tags := strings.Split(annotations, ",")
-	if event.Check.Annotations != nil {
-		for key, value := range event.Check.Annotations {
-			if stringInSlice(key, tags) {
-				newbutton := Buttons{}
-				newbutton.TextButton.Text = fmt.Sprintf("Check %s", key)
-				newbutton.TextButton.OnClick.OpenLink.URL = value
-				button = append(button, newbutton)
-			}
-		}
-	}
-	if event.Entity.Annotations != nil {
-		for key, value := range event.Check.Annotations {
-			if stringInSlice(key, tags) {
-				newbutton := Buttons{}
-				newbutton.TextButton.Text = fmt.Sprintf("Entity %s", key)
-				newbutton.TextButton.OnClick.OpenLink.URL = value
-				button = append(button, newbutton)
-			}
-		}
-	}
-	if sensuDashboard != "disabled" {
+
+	if plugin.SensuDashboard != "disabled" {
 		newbutton := Buttons{}
-		newbutton.TextButton.Text = "Link Event Sensu Source"
-		newbutton.TextButton.OnClick.OpenLink.URL = fmt.Sprintf("%s/%s/events/%s/%s", sensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
+		newbutton.TextButton.Text = "Sensu Source"
+		newbutton.TextButton.OnClick.OpenLink.URL = fmt.Sprintf("%s/%s/events/%s/%s", plugin.SensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
 		button = append(button, newbutton)
 	}
 	if len(button) == 0 {
 		newbutton := Buttons{}
-		newbutton.TextButton.Text = "Link Sensu Documentation"
+		newbutton.TextButton.Text = "Sensu Documentation"
 		newbutton.TextButton.OnClick.OpenLink.URL = "https://docs.sensu.io/sensu-go/latest"
 		button = append(button, newbutton)
 	}
 	return button
 }
 
-// eventDescription func return an message to use it
+// // eventDescription func return an message to use it
 func eventDescription(event *types.Event) string {
-	return fmt.Sprintf("Entity: %s, \nCheck: %s, \n", event.Entity.Name, event.Check.Name)
+	var (
+		annotations string
+		labels      string
+		message     string
+	)
+	message = fmt.Sprintf("Entity: %s, \nCheck: %s, \nCommand: %s, ", event.Entity.Name, event.Check.Name, event.Check.Command)
+	if event.Check.ProxyEntityName != "" {
+		message += fmt.Sprintf("\nProxy_Entity: %s, \n", event.Check.ProxyEntityName)
+	}
+	if plugin.WithAnnotations {
+		if event.Check.Annotations != nil {
+			for key, value := range event.Check.Annotations {
+				if !strings.Contains(key, plugin.Keyspace) {
+					annotations += fmt.Sprintf("%s_%s: %s, \n", "check", key, value)
+				}
+			}
+		}
+		if event.Entity.Annotations != nil {
+			for key, value := range event.Check.Annotations {
+				if !strings.Contains(key, plugin.Keyspace) {
+					annotations += fmt.Sprintf("%s_%s: %s, \n", "entity", key, value)
+				}
+			}
+		}
+		message += fmt.Sprintf("\n Annotations: \n%s", annotations)
+	}
+	if plugin.WithLabels {
+		if event.Check.Labels != nil {
+			for key, value := range event.Check.Labels {
+				if !strings.Contains(key, plugin.Keyspace) {
+					labels += fmt.Sprintf("%s_%s: %s, \n", "check", key, value)
+				}
+			}
+		}
+		if event.Entity.Labels != nil {
+			for key, value := range event.Check.Labels {
+				if !strings.Contains(key, plugin.Keyspace) {
+					labels += fmt.Sprintf("%s_%s: %s, \n", "entity", key, value)
+				}
+			}
+		}
+		message += fmt.Sprintf("\n Labels: \n%s", labels)
+	}
+	return message
 }
 
 // run func do everything
-func run(cmd *cobra.Command, args []string) error {
-	if webhook == "" {
-		_ = cmd.Help()
-		return fmt.Errorf("webhook is empty")
+func executeHandler(event *types.Event) error {
 
-	}
-	if stdin == nil {
-		stdin = os.Stdin
-	}
-	eventJSON, err := ioutil.ReadAll(stdin)
-	if err != nil {
-		return fmt.Errorf("failed to read stdin: %s", err)
-	}
-
-	if annotations == "" {
-		annotations = "documentation,playbook"
-	}
-
-	if sensuDashboard == "" {
-		sensuDashboard = "disabled"
-	}
-
-	event := &types.Event{}
-	err = json.Unmarshal(eventJSON, event)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal stdin data: %s", err)
-	}
-
-	if err = event.Validate(); err != nil {
-		return fmt.Errorf("failed to validate event: %s", err)
-	}
-
-	if !event.HasCheck() {
-		return fmt.Errorf("event does not contain check")
-	}
 	keyvalue1 := KeyValue{
 		TopLabel:         formattedEventAction(event),
 		Content:          eventDescription(event),
@@ -223,7 +292,7 @@ func run(cmd *cobra.Command, args []string) error {
 	// }
 	keyvalue3 := KeyValue{
 		TopLabel:         "Check Output",
-		Content:          event.Check.Output,
+		Content:          parseDescription(event),
 		ContentMultiline: true,
 	}
 	widget1 := Widgets{
@@ -237,8 +306,8 @@ func run(cmd *cobra.Command, args []string) error {
 		KeyValue: &keyvalue3,
 	}
 	header := Header{
-		Title:    "Sensu Event (Entity/Check)",
-		Subtitle: fmt.Sprintf("%s/%s", event.Entity.Name, event.Check.Name),
+		Title:    "Sensu Event",
+		Subtitle: parseEventTitle(event),
 	}
 	section1 := Sections{
 		Widgets: []Widgets{widget1},
@@ -265,7 +334,7 @@ func run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		fmt.Printf("[ERROR] %s", err)
 	}
-	err = Post(webhook, bodymarshal)
+	err = Post(plugin.Webhook, bodymarshal)
 	if err != nil {
 		fmt.Printf("[ERROR] %s", err)
 	}
@@ -296,4 +365,12 @@ func Post(url string, body []byte) error {
 	}
 	defer resp.Body.Close()
 	return nil
+}
+
+// time func returns only the first n bytes of a string
+func trim(s string, n int) string {
+	if len(s) > n {
+		return s[:n]
+	}
+	return s
 }

@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.0.5] - 2020-11-20
+### Changed
+- Changed webhook URL environment variable from `WEBHOOK_HANGOUTSCHAT` to `HANGOUTSCHAT_WEBHOOK`.
+- Changed from spf13/cobra to sensu-community/sensu-plugin-sdk. 
+- Changed `--withAnnotations` to parse all annotations, and exclude if it contains `sensu.io/plugins/sensu-hangouts-chat-handler/config`, and send as text to Hangouts Chat. 
+
+### Added
+- Added `--withLabels` to parse all labels, and exclude if it contains `sensu.io/plugins/sensu-hangouts-chat-handler/config`, and send as text to Hangouts Chat.
+
+### Removed 
+- Removed annotations as link in message.
+
 ## [0.0.4] - 2020-02-25
 ### Changed
 - Change from text message to card message in Hangouts Chat
