@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.0.6] - 2020-11-20
+### Changed
+- Changed go to 1.14
+
+### Removed
+- Removed travis-ci integration
+
+
 ## [0.0.5] - 2020-11-20
 ### Changed
 - Changed webhook URL environment variable from `WEBHOOK_HANGOUTSCHAT` to `HANGOUTSCHAT_WEBHOOK`.
