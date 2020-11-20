@@ -13,6 +13,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Removed
 - Removed travis-ci integration
 
+### Added
+- Add tests
+
 
 ## [0.0.5] - 2020-11-20
 ### Changed
