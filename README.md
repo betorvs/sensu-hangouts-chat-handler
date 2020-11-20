@@ -1,5 +1,5 @@
 # Sensu Go Hangouts Chat Handler
-
+![Go Test](https://github.com/betorvs/sensu-hangouts-chat-handler/workflows/Go%20Test/badge.svg)
 [![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/betorvs/sensu-hangouts-chat-handler)
 
 The Sensu Go Hangouts Chat Handler is a [Sensu Event Handler][3] which manages
