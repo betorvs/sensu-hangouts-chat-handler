@@ -78,6 +78,7 @@ Available Commands:
   version     Print the version number of this plugin
 
 Flags:
+  -A, --annotations-as-link string   Parse Check.metadata.annotations as link to post in Hangouts Chat. e. prometheus_url
   -L, --descriptionLimit int         The maximum length of the description field (default 1500)
   -d, --descriptionTemplate string   The template for the description to be sent (default "{{.Check.Output}}")
   -h, --help                         help for sensu-hangouts-chat-handler

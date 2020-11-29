@@ -25,6 +25,7 @@ type Config struct {
 	MessageLimit        int
 	DescriptionTemplate string
 	DescriptionLimit    int
+	AnnotationsAsLink   string
 }
 
 var (
@@ -108,6 +109,15 @@ var (
 			Default:   1500,
 			Usage:     "The maximum length of the description field",
 			Value:     &plugin.DescriptionLimit,
+		},
+		{
+			Path:      "annotations-as-link",
+			Env:       "HANGOUTSCHAT_ANNOTATIONS_LINK",
+			Argument:  "annotations-as-link",
+			Shorthand: "A",
+			Default:   "",
+			Usage:     "Parse Check.metadata.annotations as link to post in Hangouts Chat. e. prometheus_url",
+			Value:     &plugin.AnnotationsAsLink,
 		},
 	}
 )
@@ -220,6 +230,19 @@ func parseAnnotationsToButton(event *types.Event) []Buttons {
 		newbutton.TextButton.Text = "Sensu Source"
 		newbutton.TextButton.OnClick.OpenLink.URL = fmt.Sprintf("%s/%s/events/%s/%s", plugin.SensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
 		button = append(button, newbutton)
+	}
+	if plugin.AnnotationsAsLink != "" {
+		tags := annotationsSlice()
+		if event.Check.Annotations != nil {
+			for key, value := range event.Check.Annotations {
+				if stringInSlice(key, tags) {
+					newbutton := Buttons{}
+					newbutton.TextButton.Text = key
+					newbutton.TextButton.OnClick.OpenLink.URL = value
+					button = append(button, newbutton)
+				}
+			}
+		}
 	}
 	if len(button) == 0 {
 		newbutton := Buttons{}
@@ -365,6 +388,28 @@ func Post(url string, body []byte) error {
 	}
 	defer resp.Body.Close()
 	return nil
+}
+
+func annotationsSlice() []string {
+	tags := []string{}
+	if strings.Contains(plugin.AnnotationsAsLink, ",") {
+		tags = strings.Split(plugin.AnnotationsAsLink, ",")
+	}
+	if !strings.Contains(plugin.AnnotationsAsLink, ",") {
+		tags = append(tags, plugin.AnnotationsAsLink)
+	}
+
+	return tags
+}
+
+// use to parse annotations to send as link
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
 // time func returns only the first n bytes of a string

@@ -37,6 +37,24 @@ func TestCheckArgs(t *testing.T) {
 	assert.NoError(checkArgs(event))
 }
 
+func TestAnnotationsSlice(t *testing.T) {
+	expectedTags := []string{"runbook_url"}
+	plugin.AnnotationsAsLink = "runbook_url"
+	tags := annotationsSlice()
+	assert.Equal(t, tags, expectedTags)
+	expectedTags2 := []string{"runbook_url", "docs_url"}
+	plugin.AnnotationsAsLink = "runbook_url,docs_url"
+	tags2 := annotationsSlice()
+	assert.Equal(t, tags2, expectedTags2)
+}
+
+func TestStringInSlice(t *testing.T) {
+	testSlice := []string{"foo", "bar", "test"}
+	testString := "test"
+	testResult := stringInSlice(testString, testSlice)
+	assert.True(t, testResult)
+}
+
 func TestTrim(t *testing.T) {
 	testString := "This string is 33 characters long"
 	assert.Equal(t, trim(testString, 40), testString)
