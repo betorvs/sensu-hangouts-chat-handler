@@ -267,14 +267,14 @@ func eventDescription(event *types.Event) string {
 	if plugin.WithAnnotations {
 		if event.Check.Annotations != nil {
 			for key, value := range event.Check.Annotations {
-				if !strings.Contains(key, plugin.Keyspace) {
+				if validateDescription(key) {
 					annotations += fmt.Sprintf("%s_%s: %s, \n", "check", key, value)
 				}
 			}
 		}
 		if event.Entity.Annotations != nil {
 			for key, value := range event.Check.Annotations {
-				if !strings.Contains(key, plugin.Keyspace) {
+				if validateDescription(key) {
 					annotations += fmt.Sprintf("%s_%s: %s, \n", "entity", key, value)
 				}
 			}
@@ -284,14 +284,14 @@ func eventDescription(event *types.Event) string {
 	if plugin.WithLabels {
 		if event.Check.Labels != nil {
 			for key, value := range event.Check.Labels {
-				if !strings.Contains(key, plugin.Keyspace) {
+				if validateDescription(key) {
 					labels += fmt.Sprintf("%s_%s: %s, \n", "check", key, value)
 				}
 			}
 		}
 		if event.Entity.Labels != nil {
 			for key, value := range event.Check.Labels {
-				if !strings.Contains(key, plugin.Keyspace) {
+				if validateDescription(key) {
 					labels += fmt.Sprintf("%s_%s: %s, \n", "entity", key, value)
 				}
 			}
@@ -299,6 +299,18 @@ func eventDescription(event *types.Event) string {
 		message += fmt.Sprintf("\n Labels: \n%s", labels)
 	}
 	return message
+}
+
+func validateDescription(key string) bool {
+	// tags := []string{plugin.Keyspace}
+	if plugin.AnnotationsAsLink != "" {
+		tags := annotationsSlice()
+		if !stringInSlice(key, tags) && !strings.Contains(key, plugin.Keyspace) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // run func do everything

@@ -55,6 +55,26 @@ func TestStringInSlice(t *testing.T) {
 	assert.True(t, testResult)
 }
 
+func TestValidateDescription(t *testing.T) {
+	event := types.FixtureEvent("entity1", "check1")
+	event.Check.Annotations["runbook_url"] = "https://play.golang.org"
+	event.Check.Annotations["sensu.io/plugins/sensu-hangouts-chat-handler/config/webhook"] = "https://LongWebhookURLHere.com"
+	plugin.AnnotationsAsLink = "runbook_url"
+	test1 := validateDescription("runbook_url")
+	assert.Equal(t, test1, false)
+	test2 := validateDescription("sensu.io/plugins/sensu-hangouts-chat-handler/config/webhook")
+	assert.Equal(t, test2, false)
+}
+
+func TestEventDescription(t *testing.T) {
+	event := types.FixtureEvent("entity1", "check1")
+	event.Check.Annotations["runbook_url"] = "https://play.golang.org"
+	plugin.AnnotationsAsLink = "runbook_url"
+	test1 := eventDescription(event)
+	assert.Contains(t, test1, "check1")
+	assert.NotContains(t, test1, "check_runbook_url")
+}
+
 func TestTrim(t *testing.T) {
 	testString := "This string is 33 characters long"
 	assert.Equal(t, trim(testString, 40), testString)
