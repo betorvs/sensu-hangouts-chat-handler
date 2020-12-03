@@ -265,6 +265,13 @@ func eventDescription(event *types.Event) string {
 		message += fmt.Sprintf("\nProxy_Entity: %s, \n", event.Check.ProxyEntityName)
 	}
 	if plugin.WithAnnotations {
+		if event.Annotations != nil {
+			for key, value := range event.Annotations {
+				if validateDescription(key) {
+					annotations += fmt.Sprintf("%s_%s: %s, \n", "event", key, value)
+				}
+			}
+		}
 		if event.Check.Annotations != nil {
 			for key, value := range event.Check.Annotations {
 				if validateDescription(key) {
@@ -279,9 +286,18 @@ func eventDescription(event *types.Event) string {
 				}
 			}
 		}
-		message += fmt.Sprintf("\n Annotations: \n%s", annotations)
+		if annotations != "" {
+			message += fmt.Sprintf("\n Annotations: \n%s", annotations)
+		}
 	}
 	if plugin.WithLabels {
+		if event.Labels != nil {
+			for key, value := range event.Labels {
+				if validateDescription(key) {
+					labels += fmt.Sprintf("%s_%s: %s, \n", "event", key, value)
+				}
+			}
+		}
 		if event.Check.Labels != nil {
 			for key, value := range event.Check.Labels {
 				if validateDescription(key) {
@@ -296,7 +312,9 @@ func eventDescription(event *types.Event) string {
 				}
 			}
 		}
-		message += fmt.Sprintf("\n Labels: \n%s", labels)
+		if labels != "" {
+			message += fmt.Sprintf("\n Labels: \n%s", labels)
+		}
 	}
 	return message
 }
