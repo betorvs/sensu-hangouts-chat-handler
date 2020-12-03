@@ -8,7 +8,7 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [0.0.9] - 2020-11-30
 ### Added
-- Small annotations and labels parsing checking
+- Annotations and labels parsing checking
 
 ## [0.0.8] - 2020-11-30
 ### Added
