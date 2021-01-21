@@ -80,3 +80,14 @@ func TestTrim(t *testing.T) {
 	assert.Equal(t, trim(testString, 40), testString)
 	assert.Equal(t, trim(testString, 4), "This")
 }
+
+func TestAnnotationsExcludeSlice(t *testing.T) {
+	expectedTags := []string{"runbook_url"}
+	plugin.AnnotationsSuffixExcludeList = "runbook_url"
+	tags := annotationsExcludeSlice()
+	assert.Equal(t, tags, expectedTags)
+	expectedTags2 := []string{"runbook_url", "docs_url"}
+	plugin.AnnotationsSuffixExcludeList = "runbook_url,docs_url"
+	tags2 := annotationsExcludeSlice()
+	assert.Equal(t, tags2, expectedTags2)
+}

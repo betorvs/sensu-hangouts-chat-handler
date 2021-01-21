@@ -78,18 +78,21 @@ Available Commands:
   version     Print the version number of this plugin
 
 Flags:
-  -A, --annotations-as-link string   Parse Check.metadata.annotations as link to post in Hangouts Chat. e. prometheus_url
-  -L, --descriptionLimit int         The maximum length of the description field (default 1500)
-  -d, --descriptionTemplate string   The template for the description to be sent (default "{{.Check.Output}}")
-  -h, --help                         help for sensu-hangouts-chat-handler
-  -l, --messageLimit int             The maximum length of the message field (default 130)
-  -m, --messageTemplate string       The template for the message to be sent (default "{{.Entity.Name}}/{{.Check.Name}}")
-  -s, --sensuDashboard string        The HANGOUTS Chat Handler will use it to create a source Sensu Dashboard URL. Use HANGOUTSCHAT_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n (default "disabled")
-  -w, --webhook string               The Webhook URL, use default from HANGOUTSCHAT_WEBHOOK env var
-  -a, --withAnnotations              Include the event.metadata.Annotations in details to send to Hangouts Chat
-  -W, --withLabels                   Include the event.metadata.Labels in details to send to Hangouts Chat
+  -A, --annotations-as-link string          Parse Check.metadata.annotations as link to post in Hangouts Chat. e. prometheus_url
+  -E, --annotations-suffix-exclude string   Parse Check.metadata.annotations as link to post in Hangouts Chat. e. prometheus_url
+  -S, --annotations-suffix-link string      Parse Check.metadata.annotations as link to post in Hangouts Chat. e. prometheus_url
+  -L, --descriptionLimit int                The maximum length of the description field (default 1500)
+  -d, --descriptionTemplate string          The template for the description to be sent (default "{{.Check.Output}}")
+  -h, --help                                help for sensu-hangouts-chat-handler
+  -l, --messageLimit int                    The maximum length of the message field (default 130)
+  -m, --messageTemplate string              The template for the message to be sent (default "{{.Entity.Name}}/{{.Check.Name}}")
+  -s, --sensuDashboard string               The HANGOUTS Chat Handler will use it to create a source Sensu Dashboard URL. Use HANGOUTSCHAT_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n (default "disabled")
+  -w, --webhook string                      The Webhook URL, use default from HANGOUTSCHAT_WEBHOOK env var (default "https://chat.googleapis.com/v1/spaces/AAAAVKxzM3M/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=_AthdSlXAO-bqgg4IovrJQzNBcPtGyrvhdMXwhfscV8%3D")
+  -a, --withAnnotations                     Include the event.metadata.Annotations in details to send to Hangouts Chat
+  -W, --withLabels                          Include the event.metadata.Labels in details to send to Hangouts Chat
 
 Use "sensu-hangouts-chat-handler [command] --help" for more information about a command.
+
 
 ```
 

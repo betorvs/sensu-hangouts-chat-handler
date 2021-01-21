@@ -17,15 +17,17 @@ import (
 // Config represents the handler plugin config.
 type Config struct {
 	sensu.PluginConfig
-	Webhook             string
-	SensuDashboard      string
-	WithAnnotations     bool
-	WithLabels          bool
-	MessageTemplate     string
-	MessageLimit        int
-	DescriptionTemplate string
-	DescriptionLimit    int
-	AnnotationsAsLink   string
+	Webhook                      string
+	SensuDashboard               string
+	WithAnnotations              bool
+	WithLabels                   bool
+	MessageTemplate              string
+	MessageLimit                 int
+	DescriptionTemplate          string
+	DescriptionLimit             int
+	AnnotationsAsLink            string
+	AnnotationsSuffixAsLink      string
+	AnnotationsSuffixExcludeList string
 }
 
 var (
@@ -118,6 +120,24 @@ var (
 			Default:   "",
 			Usage:     "Parse Check.metadata.annotations as link to post in Hangouts Chat. e. prometheus_url",
 			Value:     &plugin.AnnotationsAsLink,
+		},
+		{
+			Path:      "annotations-suffix-link",
+			Env:       "HANGOUTSCHAT_ANNOTATIONS_SUFFIX_LINK",
+			Argument:  "annotations-suffix-link",
+			Shorthand: "S",
+			Default:   "",
+			Usage:     "Parse Check.metadata.annotations as link to post in Hangouts Chat. e. prometheus_url",
+			Value:     &plugin.AnnotationsSuffixAsLink,
+		},
+		{
+			Path:      "annotations-suffix-exclude",
+			Env:       "HANGOUTSCHAT_ANNOTATIONS_SUFFIX_EXCLUDE",
+			Argument:  "annotations-suffix-exclude",
+			Shorthand: "E",
+			Default:   "",
+			Usage:     "Parse Check.metadata.annotations as link to post in Hangouts Chat. e. prometheus_url",
+			Value:     &plugin.AnnotationsSuffixExcludeList,
 		},
 	}
 )
@@ -241,6 +261,28 @@ func parseAnnotationsToButton(event *types.Event) []Buttons {
 					newbutton.TextButton.OnClick.OpenLink.URL = value
 					button = append(button, newbutton)
 				}
+			}
+		}
+	}
+	if plugin.AnnotationsSuffixAsLink != "" {
+		// tags := annotationsSlice()
+		if event.Check.Annotations != nil {
+			for key, value := range event.Check.Annotations {
+				if plugin.AnnotationsSuffixExcludeList != "" {
+					tags := annotationsExcludeSlice()
+					if stringInSlice(key, tags) {
+						continue
+					}
+				}
+				// && strings.Contains(key, )
+				if strings.HasSuffix(key, plugin.AnnotationsSuffixAsLink) {
+
+					newbutton := Buttons{}
+					newbutton.TextButton.Text = key
+					newbutton.TextButton.OnClick.OpenLink.URL = value
+					button = append(button, newbutton)
+				}
+
 			}
 		}
 	}
@@ -427,6 +469,18 @@ func annotationsSlice() []string {
 	}
 	if !strings.Contains(plugin.AnnotationsAsLink, ",") {
 		tags = append(tags, plugin.AnnotationsAsLink)
+	}
+
+	return tags
+}
+
+func annotationsExcludeSlice() []string {
+	tags := []string{}
+	if strings.Contains(plugin.AnnotationsSuffixExcludeList, ",") {
+		tags = strings.Split(plugin.AnnotationsSuffixExcludeList, ",")
+	}
+	if !strings.Contains(plugin.AnnotationsSuffixExcludeList, ",") {
+		tags = append(tags, plugin.AnnotationsSuffixExcludeList)
 	}
 
 	return tags
