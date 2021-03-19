@@ -25,6 +25,7 @@ type Config struct {
 	MessageLimit                 int
 	DescriptionTemplate          string
 	DescriptionLimit             int
+	TitlePrettify                bool
 	AnnotationsAsLink            string
 	AnnotationsSuffixAsLink      string
 	AnnotationsSuffixExcludeList string
@@ -111,6 +112,15 @@ var (
 			Default:   1500,
 			Usage:     "The maximum length of the description field",
 			Value:     &plugin.DescriptionLimit,
+		},
+		{
+			Path:      "titlePrettify",
+			Env:       "",
+			Argument:  "titlePrettify",
+			Shorthand: "T",
+			Default:   false,
+			Usage:     "Remove all -, /, \\ and apply strings.Title in message title",
+			Value:     &plugin.TitlePrettify,
 		},
 		{
 			Path:      "annotations-as-link",
@@ -215,6 +225,10 @@ func parseEventTitle(event *types.Event) (title string) {
 	title, err := templates.EvalTemplate("title", plugin.MessageTemplate, event)
 	if err != nil {
 		return ""
+	}
+	if plugin.TitlePrettify {
+		newTitle := titlePrettify(title)
+		return trim(newTitle, plugin.MessageLimit)
 	}
 	return trim(title, plugin.MessageLimit)
 }
@@ -502,4 +516,13 @@ func trim(s string, n int) string {
 		return s[:n]
 	}
 	return s
+}
+
+func titlePrettify(s string) string {
+	var title string
+	title = strings.ReplaceAll(s, "-", " ")
+	title = strings.ReplaceAll(title, "\\", " ")
+	title = strings.ReplaceAll(title, "/", " ")
+	title = strings.Title(title)
+	return title
 }

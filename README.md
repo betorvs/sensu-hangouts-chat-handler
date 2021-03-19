@@ -87,7 +87,8 @@ Flags:
   -l, --messageLimit int                    The maximum length of the message field (default 130)
   -m, --messageTemplate string              The template for the message to be sent (default "{{.Entity.Name}}/{{.Check.Name}}")
   -s, --sensuDashboard string               The HANGOUTS Chat Handler will use it to create a source Sensu Dashboard URL. Use HANGOUTSCHAT_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n (default "disabled")
-  -w, --webhook string                      The Webhook URL, use default from HANGOUTSCHAT_WEBHOOK env var (default "https://chat.googleapis.com/v1/spaces/AAAAVKxzM3M/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=_AthdSlXAO-bqgg4IovrJQzNBcPtGyrvhdMXwhfscV8%3D")
+  -T, --titlePrettify                       Remove all -, /, \ and apply strings.Title in message title
+  -w, --webhook string                      The Webhook URL, use default from HANGOUTSCHAT_WEBHOOK env var
   -a, --withAnnotations                     Include the event.metadata.Annotations in details to send to Hangouts Chat
   -W, --withLabels                          Include the event.metadata.Labels in details to send to Hangouts Chat
 
