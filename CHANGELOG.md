@@ -10,6 +10,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 ### Added
 - flag `--titlePrettify` to apply strings.Title in message title and remove these characters -, /, \
 
+### Changed
+- update golang to 1.15
+
 ## [0.0.10] - 2021-12-21
 ### Added
 - flag to parse annotations using strings.HasSuffix to create button: -S or --annotations-suffix-link
