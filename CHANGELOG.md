@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2021-04-28
+### Added 
+- flag `--enable-threadKey` to send message using `&threadKey=%s` equal entity.name-check.name. Then it keeps it in the same thread when it open and close an alert.
+
+### Changed
+- golang version to 1.16
+
 ## [0.0.11] - 2021-03-19
 ### Added
 - flag `--titlePrettify` to apply strings.Title in message title and remove these characters -, /, \

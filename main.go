@@ -29,6 +29,7 @@ type Config struct {
 	AnnotationsAsLink            string
 	AnnotationsSuffixAsLink      string
 	AnnotationsSuffixExcludeList string
+	enableThreadKey              bool
 }
 
 var (
@@ -148,6 +149,15 @@ var (
 			Default:   "",
 			Usage:     "Parse Check.metadata.annotations as link to post in Hangouts Chat. e. prometheus_url",
 			Value:     &plugin.AnnotationsSuffixExcludeList,
+		},
+		{
+			Path:      "enable-threadKey",
+			Env:       "",
+			Argument:  "enable-threadKey",
+			Shorthand: "",
+			Default:   false,
+			Usage:     "Send message with &threadKey=event.id",
+			Value:     &plugin.enableThreadKey,
 		},
 	}
 )
@@ -443,7 +453,11 @@ func executeHandler(event *types.Event) error {
 	if err != nil {
 		fmt.Printf("[ERROR] %s", err)
 	}
-	err = Post(plugin.Webhook, bodymarshal)
+	webhook := plugin.Webhook
+	if plugin.enableThreadKey {
+		webhook = fmt.Sprintf("%s&threadKey=%s", plugin.Webhook, parseAlias(event))
+	}
+	err = Post(webhook, bodymarshal)
 	if err != nil {
 		fmt.Printf("[ERROR] %s", err)
 	}
@@ -525,4 +539,8 @@ func titlePrettify(s string) string {
 	title = strings.ReplaceAll(title, "/", " ")
 	title = strings.Title(title)
 	return title
+}
+
+func parseAlias(event *types.Event) string {
+	return fmt.Sprintf("%s-%s", event.Entity.Name, event.Check.Name)
 }
