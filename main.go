@@ -29,7 +29,8 @@ type Config struct {
 	AnnotationsAsLink            string
 	AnnotationsSuffixAsLink      string
 	AnnotationsSuffixExcludeList string
-	enableThreadKey              bool
+	EnableThreadKey              bool
+	ThreadKeyValue               string
 }
 
 var (
@@ -151,13 +152,22 @@ var (
 			Value:     &plugin.AnnotationsSuffixExcludeList,
 		},
 		{
-			Path:      "enable-threadKey",
+			Path:      "threadKey",
 			Env:       "",
-			Argument:  "enable-threadKey",
+			Argument:  "threadKey",
 			Shorthand: "",
 			Default:   false,
 			Usage:     "Send message with &threadKey=event.id",
-			Value:     &plugin.enableThreadKey,
+			Value:     &plugin.EnableThreadKey,
+		},
+		{
+			Path:      "threadKey-value",
+			Env:       "",
+			Argument:  "threadKey-value",
+			Shorthand: "",
+			Default:   "id",
+			Usage:     "Send message with &threadKey=event.id. Options: id or alias (entity.name-check.name)",
+			Value:     &plugin.ThreadKeyValue,
 		},
 	}
 )
@@ -454,8 +464,15 @@ func executeHandler(event *types.Event) error {
 		fmt.Printf("[ERROR] %s", err)
 	}
 	webhook := plugin.Webhook
-	if plugin.enableThreadKey {
-		webhook = fmt.Sprintf("%s&threadKey=%s", plugin.Webhook, parseAlias(event))
+	if plugin.EnableThreadKey {
+		switch plugin.ThreadKeyValue {
+		case "id":
+			webhook = fmt.Sprintf("%s&threadKey=%s", plugin.Webhook, event.GetUUID())
+		case "alias":
+			webhook = fmt.Sprintf("%s&threadKey=%s", plugin.Webhook, parseAlias(event))
+		default:
+			webhook = fmt.Sprintf("%s&threadKey=%s", plugin.Webhook, event.GetUUID())
+		}
 	}
 	err = Post(webhook, bodymarshal)
 	if err != nil {

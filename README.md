@@ -83,13 +83,14 @@ Flags:
   -S, --annotations-suffix-link string      Parse Check.metadata.annotations as link to post in Hangouts Chat. e. prometheus_url
   -L, --descriptionLimit int                The maximum length of the description field (default 1500)
   -d, --descriptionTemplate string          The template for the description to be sent (default "{{.Check.Output}}")
-      --enable-threadKey                    Send message with &threadKey=event.id
   -h, --help                                help for sensu-hangouts-chat-handler
   -l, --messageLimit int                    The maximum length of the message field (default 130)
   -m, --messageTemplate string              The template for the message to be sent (default "{{.Entity.Name}}/{{.Check.Name}}")
   -s, --sensuDashboard string               The HANGOUTS Chat Handler will use it to create a source Sensu Dashboard URL. Use HANGOUTSCHAT_SENSU_DASHBOARD. Example: http://sensu-dashboard.example.local/c/~/n (default "disabled")
+      --threadKey                           Send message with &threadKey=event.id
+      --threadKey-value string              Send message with &threadKey=event.id. Options: id or alias (entity.name-check.name) (default "id")
   -T, --titlePrettify                       Remove all -, /, \ and apply strings.Title in message title
-  -w, --webhook string                      The Webhook URL, use default from HANGOUTSCHAT_WEBHOOK env var (default "https://chat.googleapis.com/v1/spaces/...")
+  -w, --webhook string                      The Webhook URL, use default from HANGOUTSCHAT_WEBHOOK env var
   -a, --withAnnotations                     Include the event.metadata.Annotations in details to send to Hangouts Chat
   -W, --withLabels                          Include the event.metadata.Labels in details to send to Hangouts Chat
 

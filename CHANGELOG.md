@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2021-04-29
+### Added 
+- flag `--threadKey-value` to switch between event.id and entity.name-check.name. 
+
+### Changed
+- flag `--enable-threadKey` to `--threadKey` and default value using event.id.
+- remove `-race` flag from tests.
+- update go. files
+
 ## [0.1.0] - 2021-04-28
 ### Added 
 - flag `--enable-threadKey` to send message using `&threadKey=%s` equal entity.name-check.name. Then it keeps it in the same thread when it open and close an alert.
