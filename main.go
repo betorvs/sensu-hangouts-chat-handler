@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -279,7 +280,7 @@ func formattedEventAction(event *types.Event) string {
 func parseAnnotationsToButton(event *types.Event) []Buttons {
 	var button []Buttons
 
-	if plugin.SensuDashboard != "disabled" {
+	if plugin.SensuDashboard != "disabled" && checkURL(plugin.SensuDashboard) {
 		newbutton := Buttons{}
 		newbutton.TextButton.Text = "Sensu Source"
 		newbutton.TextButton.OnClick.OpenLink.URL = fmt.Sprintf("%s/%s/events/%s/%s", plugin.SensuDashboard, event.Entity.Namespace, event.Entity.Name, event.Check.Name)
@@ -289,7 +290,7 @@ func parseAnnotationsToButton(event *types.Event) []Buttons {
 		tags := annotationsSlice()
 		if event.Check.Annotations != nil {
 			for key, value := range event.Check.Annotations {
-				if stringInSlice(key, tags) {
+				if stringInSlice(key, tags) && checkURL(value) {
 					newbutton := Buttons{}
 					newbutton.TextButton.Text = key
 					newbutton.TextButton.OnClick.OpenLink.URL = value
@@ -309,7 +310,7 @@ func parseAnnotationsToButton(event *types.Event) []Buttons {
 					}
 				}
 				// && strings.Contains(key, )
-				if strings.HasSuffix(key, plugin.AnnotationsSuffixAsLink) {
+				if strings.HasSuffix(key, plugin.AnnotationsSuffixAsLink) && checkURL(value) {
 
 					newbutton := Buttons{}
 					newbutton.TextButton.Text = key
@@ -456,7 +457,7 @@ func executeHandler(event *types.Event) error {
 	}
 	// prettyJSON, err := json.MarshalIndent(formPost, "", "  ")
 	// if err != nil {
-	// 	log.Fatal("Failed to generate json", err)
+	// 	fmt.Printf("Failed to generate json %v", err)
 	// }
 	// fmt.Printf("%s\n", string(prettyJSON))
 	bodymarshal, err := json.Marshal(&formPost)
@@ -560,4 +561,9 @@ func titlePrettify(s string) string {
 
 func parseAlias(event *types.Event) string {
 	return fmt.Sprintf("%s-%s", event.Entity.Name, event.Check.Name)
+}
+
+func checkURL(str string) bool {
+	u, err := url.Parse(str)
+	return err == nil && u.Scheme != "" && u.Host != ""
 }

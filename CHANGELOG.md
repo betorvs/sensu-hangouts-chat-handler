@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2021-05-20
+### Changed
+- Add a checkURL before creating annotations. Inspired by [stackoverflow answer](https://stackoverflow.com/questions/31480710/validate-url-with-standard-package-in-go)
+
 ## [0.1.1] - 2021-04-29
 ### Added 
 - flag `--threadKey-value` to switch between event.id and entity.name-check.name. 

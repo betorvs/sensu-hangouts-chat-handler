@@ -102,3 +102,18 @@ func TestTitlePrettify(t *testing.T) {
 	val2 := "Long Check With Too Many Dashes And Slashes And Others"
 	assert.Equal(t, val2, res2)
 }
+
+func TestCheckURL(t *testing.T) {
+	test1 := checkURL("http:::/not.valid/a//a??a?b=&&c#hi")
+	assert.False(t, test1)
+	test2 := checkURL("http//google.com")
+	assert.False(t, test2)
+	test3 := checkURL("google.com")
+	assert.False(t, test3)
+	test4 := checkURL("/foo/bar")
+	assert.False(t, test4)
+	test5 := checkURL("http://google.com")
+	assert.True(t, test5)
+	test6 := checkURL("http://")
+	assert.False(t, test6)
+}
