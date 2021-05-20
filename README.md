@@ -130,6 +130,13 @@ sensuctl asset add betorvs/sensu-hangouts-chat-handler --rename sensu-hangouts-c
 
 See `sensuctl asset --help` for details on how to specify version.
 
+### troubleshoot tips
+
+From [Sensu Docs][4]:
+```bash
+sensuctl event info <entity_name> <check_name> --format json |./sensu-hangouts-chat-handler
+```
+
 ## Contributing
 
 See https://github.com/sensu/sensu-go/blob/master/CONTRIBUTING.md
@@ -139,3 +146,4 @@ See https://github.com/sensu/sensu-go/blob/master/CONTRIBUTING.md
 [3]: https://docs.sensu.io/sensu-go/5.0/reference/handlers/#how-do-sensu-handlers-work
 [4]: https://github.com/betorvs/sensu-hangouts-chat-handler/releases
 [5]: https://github.com/clevertoday/sensu-plugins-hangouts-chat
+[6]: https://docs.sensu.io/sensu-go/latest/operations/maintain-sensu/troubleshoot/
